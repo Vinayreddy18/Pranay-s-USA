@@ -5,6 +5,7 @@ on:
     branches:
       - master
       - main
+      - new one
   push:
     branches:
       - main
