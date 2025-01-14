@@ -1,64 +1,33 @@
-name: AI Code Review
+name: Gemini AI Code Reviewer
 
 on:
-  pull_request:
-    branches:
-      - master
-      - main
-  push:
-    branches:
-      - main
   issue_comment:
     types: [created]
-
-permissions:
-  contents: read
-  pull-requests: write
-  issues: write
-
+permissions: write-all
 jobs:
-  ai_review:
+  gemini-code-review:
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' || github.event_name == 'push' || (github.event_name == 'issue_comment' && github.event.issue.pull_request)
+    if: |
+      github.event.issue.pull_request &&
+      contains(github.event.comment.body, '/gemini-review')
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v2
+      - name: Checkout Repo
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
-      - name: Install Python and dependencies
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
         run: |
-          sudo apt update
-          sudo apt install -y python3-pip
-          pip3 install openai==0.28 pygithub
+          pip install -r requirements.txt
 
-      - name: Run AI Code Review
+      - name: Run Gemini AI Code Reviewer
         env:
-          AI_PROVIDER: ${{ vars.AI_PROVIDER }}
-          # echo ${{AI_PROVIDER}}
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          OPENAI_MODEL: ${{ vars.OPENAI_MODEL }}
-          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
-          OPENROUTER_MODEL_ID: ${{ vars.OPENROUTER_MODEL_ID }}
-          MAX_TOKENS: ${{ vars.MAX_TOKENS }}
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
-          PR_NUMBER: ${{ github.event.pull_request.number || github.event.issue.number }}
-          EVENT_NAME: ${{ github.event_name }}
-          COMMENT_ID: ${{ github.event.comment.id }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
-          echo "Running AI code review... 🚀"
-          echo "PR_NUMBER: $PR_NUMBER"
-          echo "EVENT_NAME: $EVENT_NAME"
-          echo "COMMENT_ID: $COMMENT_ID"
-          if [ -z "$AI_PROVIDER" ]; then
-            echo "AI_PROVIDER is not set! 😱 Please set it to 'openai' or 'openrouter'."
-            exit 1
-          fi
-          
-          if [ "$AI_PROVIDER" = "openai" ] && [ -z "$OPENAI_API_KEY" ]; then
-            echo "OPENAI_API_KEY is missing! 😱 Please set it in your repository secrets."
-            exit 1
-          elif [ "$AI_PROVIDER" = "openrouter" ] && [ -z "$OPENROUTER_API_KEY" ]; then
-            echo "OPENROUTER_API_KEY is missing! 😱 Please set it in your repository secrets."
-            exit 1
-          fi
-          
-          python3 .github/workflows/ai_review.py
+          python3.10 .github/workflows/review_code_gemini.py
