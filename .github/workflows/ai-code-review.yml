@@ -1,6 +1,11 @@
 name: Gemini AI Code Reviewer
 
 on:
+  pull_request:
+    branches:
+      - main
+      - master
+      - dummy
   issue_comment:
     types: [created]
 permissions: write-all
