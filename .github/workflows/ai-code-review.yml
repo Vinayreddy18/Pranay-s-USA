@@ -44,6 +44,9 @@ jobs:
           COMMENT_ID: ${{ github.event.comment.id }}
         run: |
           echo "Running AI code review... 🚀"
+          echo "PR_NUMBER: $PR_NUMBER"
+          echo "EVENT_NAME: $EVENT_NAME"
+          echo "COMMENT_ID: $COMMENT_ID"
           if [ -z "$AI_PROVIDER" ]; then
             echo "AI_PROVIDER is not set! 😱 Please set it to 'openai' or 'openrouter'."
             exit 1
